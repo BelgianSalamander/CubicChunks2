@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(SkyLightEngine.class)
 public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements SkyLightColumnChecker,
@@ -223,4 +224,127 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
 //            cir.setReturnValue(1);
 //        }
 //    }
+
+    //Light Engine Tracker
+    @Inject(
+        method = "checkNeighborsAfterUpdate",
+        at = @At(
+            value = "INVOKE",
+            shift = At.Shift.BEFORE,
+            target = "Lnet/minecraft/world/level/lighting/SkyLightEngine;checkNeighbor(JJIZ)V",
+            ordinal = 0
+        ),
+        locals = LocalCapture.CAPTURE_FAILHARD
+    )
+    private void trackCheckNeighbor0(long l, int i, boolean bl, CallbackInfo ci, long m, int j, int k, int n, int q, long r) {
+        if (this.getTracker() != null) {
+            this.getTracker().writeCheckNeighbor(
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(r),
+                BlockPos.getY(r),
+                BlockPos.getZ(r),
+
+                i, bl
+            );
+        }
+    }
+
+    @Inject(
+        method = "checkNeighborsAfterUpdate",
+        at = @At(
+            value = "INVOKE",
+            shift = At.Shift.BEFORE,
+            target = "Lnet/minecraft/world/level/lighting/SkyLightEngine;checkNeighbor(JJIZ)V",
+            ordinal = 1
+        ),
+        locals = LocalCapture.CAPTURE_FAILHARD
+    )
+    private void trackCheckNeighbor1(long l, int i, boolean bl, CallbackInfo ci, long m, int j, int k, int n, int q, long r, long s, long t, long u) {
+        if (this.getTracker() != null) {
+            this.getTracker().writeCheckNeighbor(
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(t),
+                BlockPos.getY(t),
+                BlockPos.getZ(t),
+
+                i, bl
+            );
+        }
+    }
+
+    @Inject(
+        method = "checkNeighborsAfterUpdate",
+        at = @At(
+            value = "INVOKE",
+            shift = At.Shift.BEFORE,
+            target = "Lnet/minecraft/world/level/lighting/SkyLightEngine;checkNeighbor(JJIZ)V",
+            ordinal = 2
+        ),
+        locals = LocalCapture.CAPTURE_FAILHARD
+    )
+    private void trackCheckNeighbor2(long l, int i, boolean bl, CallbackInfo ci, long m, int j, int k, int n, int q, long r, long s, long t, long u, Direction[] var19, int var20,
+                                     int var21, int v, long w) {
+        if (this.getTracker() != null) {
+            this.getTracker().writeCheckNeighbor(
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(w),
+                BlockPos.getY(w),
+                BlockPos.getZ(w),
+
+                i, bl
+            );
+        }
+    }
+
+    @Inject(
+        method = "checkNeighborsAfterUpdate",
+        at = @At(
+            value = "INVOKE",
+            shift = At.Shift.BEFORE,
+            target = "Lnet/minecraft/world/level/lighting/SkyLightEngine;checkNeighbor(JJIZ)V",
+            ordinal = 3
+        ),
+        locals = LocalCapture.CAPTURE_FAILHARD
+    )
+    private void trackCheckNeighbor3(long l, int i, boolean bl, CallbackInfo ci, long m, int j, int k, int n, int q, long r, long s, long t, long u, Direction[] var19, int var20,
+                                     int var21, int v, long w, long x, long y) {
+        if (this.getTracker() != null) {
+            this.getTracker().writeCheckNeighbor(
+                BlockPos.getX(l),
+                BlockPos.getY(l),
+                BlockPos.getZ(l),
+
+                BlockPos.getX(w),
+                BlockPos.getY(w),
+                BlockPos.getZ(w),
+
+                BlockPos.getX(y),
+                BlockPos.getY(y),
+                BlockPos.getZ(y),
+
+                i, bl
+            );
+        }
+    }
 }

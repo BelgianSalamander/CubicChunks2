@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.debug.light.LightEngineTracker;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
@@ -29,7 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LayerLightEngine.class)
-public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> extends MixinDynamicGraphMinFixedPoint implements CubicLayerLightEngine {
+public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> extends MixinDynamicGraphMinFixedPoint implements CubicLayerLightEngine,
+    LightEngineTracker.Access {
 
     @Shadow @Final protected S storage;
 
@@ -47,6 +49,8 @@ public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S 
     }
 
     @Shadow @Nullable protected abstract BlockGetter getChunk(int chunkX, int chunkZ);
+
+    private LightEngineTracker tracker = null;
 
     @Override
     public void retainCubeData(CubePos posIn, boolean retain) {
@@ -117,5 +121,16 @@ public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S 
         if (this.isCubic) {
             throw new UnsupportedOperationException("Trying to get chunks in a cubic context! Use \"getCubeReader\" instead!");
         }
+    }
+
+    @Override
+    @Nullable
+    public LightEngineTracker getTracker() {
+        return this.tracker;
+    }
+
+    @Override
+    public void setTracker(LightEngineTracker tracker) {
+        this.tracker = tracker;
     }
 }

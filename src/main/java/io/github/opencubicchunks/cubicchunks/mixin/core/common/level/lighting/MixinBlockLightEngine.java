@@ -4,12 +4,15 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.lighting.BlockLightEngine;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @SuppressWarnings("rawtypes")
 @Mixin(BlockLightEngine.class)
@@ -34,5 +37,37 @@ public abstract class MixinBlockLightEngine extends MixinLayerLightEngine {
             Coords.blockToCube(blockZ)
         );
         cir.setReturnValue(cube != null ? cube.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0);
+    }
+
+    //Light Engine Tracker
+    @Inject(
+        method = "checkNeighborsAfterUpdate",
+        at =  @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/level/lighting/BlockLightEngine;checkNeighbor(JJIZ)V",
+            shift = At.Shift.BEFORE
+        ),
+        locals = LocalCapture.CAPTURE_FAILHARD
+    )
+    private void trackCheckNeighbor(long startPos, int lightValue, boolean decrease, CallbackInfo ci, long sectionPos, Direction[] directions, int numDirections, int i,
+                                    Direction direction, long newPos) {
+        if (this.getTracker() != null) {
+            this.getTracker().writeCheckNeighbor(
+                BlockPos.getX(startPos),
+                BlockPos.getY(startPos),
+                BlockPos.getZ(startPos),
+
+                BlockPos.getX(startPos),
+                BlockPos.getY(startPos),
+                BlockPos.getZ(startPos),
+
+                BlockPos.getX(newPos),
+                BlockPos.getY(newPos),
+                BlockPos.getZ(newPos),
+
+                lightValue,
+                decrease
+            );
+        }
     }
 }

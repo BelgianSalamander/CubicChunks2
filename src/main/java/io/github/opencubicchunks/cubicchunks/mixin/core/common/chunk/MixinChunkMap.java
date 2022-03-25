@@ -33,9 +33,12 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.VerticalViewDistanceListener;
+import io.github.opencubicchunks.cubicchunks.debug.light.LightEngineTracker;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkMapTrackedEntityAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.DistanceManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.IOWorkerAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.LevelLightEngineAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ThreadedLevelLightEngineAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -84,6 +87,7 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.Util;
+import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -92,6 +96,8 @@ import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.PlayerMap;
@@ -115,6 +121,7 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
@@ -1392,5 +1399,46 @@ public abstract class MixinChunkMap implements CubeMap, CubeMapInternal, Vertica
             return;
         }
         regionCubeIO.flush();
+    }
+
+    boolean[][] enableTracker = {
+        {false, false},
+        {true, false},
+        {false, false}
+    };
+
+    //Light Engine Tracker
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void enableTracker(ServerLevel serverLevel, LevelStorageSource.LevelStorageAccess levelStorageAccess, DataFixer dataFixer, StructureManager structureManager,
+                               Executor executor, BlockableEventLoop blockableEventLoop, LightChunkGetter lightChunkGetter, ChunkGenerator chunkGenerator,
+                               ChunkProgressListener chunkProgressListener, ChunkStatusUpdateListener chunkStatusUpdateListener, Supplier supplier, int i, boolean bl,
+                               CallbackInfo ci) {
+
+        DimensionType dimensionType = serverLevel.dimensionType();
+        Registry<DimensionType> registry = serverLevel.registryAccess().registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY);
+        ResourceLocation key = registry.getKey(dimensionType);
+
+        int dimension;
+        if (key.equals(DimensionType.OVERWORLD_LOCATION.location())) {
+            dimension = 0;
+        } else if (key.equals(DimensionType.NETHER_LOCATION.location())) {
+            dimension = 1;
+        } else if(key.equals(DimensionType.END_LOCATION.location())) {
+            dimension = 2;
+        } else {
+            System.err.println("Unknown dimension type: " + key);
+            return;
+        }
+
+        boolean[] enable = enableTracker[dimension];
+        LevelLightEngineAccess access = (LevelLightEngineAccess) this.lightEngine;
+
+        if (enable[0]) {
+            ((LightEngineTracker.Access) access.getBlockEngine()).setTracker(new LightEngineTracker());
+        }
+
+        if (enable[1]) {
+            ((LightEngineTracker.Access) access.getSkyEngine()).setTracker(new LightEngineTracker());
+        }
     }
 }
