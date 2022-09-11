@@ -60,30 +60,4 @@ public abstract class MixinNoiseChunk {
             return chunkAccess.getHeight() / noiseGeneratorSettings.noiseSettings().getCellHeight();
         }
     }
-
-    @Inject(
-        method = "<init>",
-        at = @At(
-            value = "FIELD",
-            opcode = Opcodes.PUTFIELD,
-            target = "Lnet/minecraft/world/level/levelgen/NoiseChunk;wrapped:Ljava/util/Map;",
-            shift = At.Shift.AFTER
-        )
-    )
-    private void wrapWrapped(int i, int j, int k, NoiseRouter noiseRouter, int l, int m, DensityFunctions.BeardifierOrMarker beardifierOrMarker,
-                             NoiseGeneratorSettings noiseGeneratorSettings, Aquifer.FluidPicker fluidPicker, Blender blender, CallbackInfo ci) {
-
-    }
-
-    //TODO: This is a hack to fix a ConcurrentModificationException. It would be MUCH better to fix the underlying issue.
-    @Inject(
-        method = "wrap",
-        at = @At("HEAD"),
-        cancellable = true
-    )
-    private void makeSynchronized(DensityFunction densityFunction, CallbackInfoReturnable<DensityFunction> cir) {
-        synchronized (this) {
-            cir.setReturnValue(this.wrapped.computeIfAbsent(densityFunction, this::wrapNew));
-        }
-    }
 }

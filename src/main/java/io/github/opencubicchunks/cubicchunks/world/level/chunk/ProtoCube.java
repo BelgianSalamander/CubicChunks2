@@ -74,7 +74,6 @@ public class ProtoCube extends CubeAccess implements CubicLevelHeightAccessor {
     private static final BlockState EMPTY_BLOCK = Blocks.AIR.defaultBlockState();
     private static final FluidState EMPTY_FLUID = Fluids.EMPTY.defaultFluidState();
 
-    private final CubePos cubePos;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     private final Map<Heightmap.Types, SurfaceTrackerLeaf[]> cubeHeightmaps;
@@ -130,8 +129,6 @@ public class ProtoCube extends CubeAccess implements CubicLevelHeightAccessor {
 
         this.cubeHeightmaps = Maps.newEnumMap(Heightmap.Types.class);
         this.carvingMasks = new Object2ObjectArrayMap<>();
-
-        this.cubePos = cubePos;
 
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
