@@ -143,6 +143,7 @@ public abstract class MixinServerChunkCache implements ServerCubeCache, LightCub
     }
 
     @Nullable
+    @Override
     public LevelCube getCubeNow(int cubeX, int cubeY, int cubeZ) {
         if (Thread.currentThread() != this.mainThread) {
             return null;
@@ -229,7 +230,7 @@ public abstract class MixinServerChunkCache implements ServerCubeCache, LightCub
             }
         }
 
-        return this.chunkAbsent(chunkholder, j) ? CubeHolder.MISSING_CUBE_FUTURE : ((CubeHolder) chunkholder).getOrScheduleCubeFuture(requiredStatus,
+        return this.chunkAbsent(chunkholder, j) ? CubeHolder.UNLOADED_CUBE_FUTURE : ((CubeHolder) chunkholder).getOrScheduleCubeFuture(requiredStatus,
             this.chunkMap);
     }
 
@@ -293,7 +294,7 @@ public abstract class MixinServerChunkCache implements ServerCubeCache, LightCub
 
             while (true) {
                 ChunkStatus chunkstatus = CHUNK_STATUSES.get(j);
-                Optional<CubeAccess> optional = ((CubeHolder) chunkholder).getCubeFutureIfPresentUnchecked(chunkstatus).getNow(CubeHolder.MISSING_CUBE).left();
+                Optional<CubeAccess> optional = ((CubeHolder) chunkholder).getCubeFutureIfPresentUnchecked(chunkstatus).getNow(CubeHolder.UNLOADED_CUBE).left();
                 if (optional.isPresent()) {
                     return optional.get();
                 }
@@ -352,10 +353,8 @@ public abstract class MixinServerChunkCache implements ServerCubeCache, LightCub
         }
 
         ((CubeMap) this.chunkMap).getCubes().forEach((cubeHolder) -> {
-            Optional<LevelCube> optional =
-                ((CubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(CubeHolder.UNLOADED_CUBE).left();
-            if (optional.isPresent()) {
-                LevelCube cube = optional.get();
+            LevelCube cube = ((CubeHolder) cubeHolder).getTickingCube();
+            if (cube != null) {
                 this.level.getProfiler().push("broadcast");
                 ((CubeHolder) cubeHolder).broadcastChanges(cube);
                 this.level.getProfiler().pop();
@@ -380,7 +379,7 @@ public abstract class MixinServerChunkCache implements ServerCubeCache, LightCub
         ChunkHolder chunkHolder = this.getVisibleCubeIfPresent(pos);
         if (chunkHolder != null) {
             CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> o = unsafeCast((chunkHolder.getFullChunkFuture()));
-            o.getNow(CubeHolder.UNLOADED_CUBE).left().ifPresent(chunkConsumer);
+            o.getNow(CubeHolder.UNLOADED_LEVEL_CUBE).left().ifPresent(chunkConsumer);
         }
 
     }
