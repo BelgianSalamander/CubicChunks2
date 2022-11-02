@@ -20,35 +20,32 @@ import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.NoiseChunk;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseRouter;
-import net.minecraft.world.level.levelgen.NoiseRouterData;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(NoiseChunk.class)
 public abstract class MixinNoiseChunk implements NoiseCube {
     private static final int SURFACE_SEARCH_UP = 64;
     private static final int SURFACE_SEARCH_DOWN = 64;
 
+    @Shadow @Final int cellCountY;
+
     private final Long2ObjectMap<int[]> preliminarySurfaceForY = new Long2ObjectOpenHashMap<>();
-    protected int minY;
+    private int minY;
     private boolean cubic;
 
     @Shadow @Final private NoiseSettings noiseSettings;
 
     @Shadow @Final private Map<DensityFunction, DensityFunction> wrapped;
 
-    @Shadow protected abstract DensityFunction wrapNew(DensityFunction densityFunction);
-
-    @Shadow @Final private int cellCountY;
-
     @Shadow @Final private DensityFunction initialDensityNoJaggedness;
+
+    @Shadow protected abstract DensityFunction wrapNew(DensityFunction densityFunction);
 
     @Override
     public void setMinY(int minY) {
@@ -142,7 +139,9 @@ public abstract class MixinNoiseChunk implements NoiseCube {
         for (int i = 1; i < this.cellCountY; i++) {
             if (!isAir[i - 1] && isAir[i]) {
                 //We have found a transition from solid to air. Therefore, the surface level of both these cells is the solid cell.
-                highestSurfaces[i - 1] = highestSurfaces[i] = this.minY + (i - 1) * this.noiseSettings.getCellHeight();
+                int highestSurface = this.minY + (i - 1) * this.noiseSettings.getCellHeight();
+                highestSurfaces[i - 1] = highestSurface;
+                highestSurfaces[i] = highestSurface;
             }
         }
 
@@ -200,7 +199,7 @@ public abstract class MixinNoiseChunk implements NoiseCube {
         )
     )
     private static NoiseChunk setMinY(int i, int j, int k, NoiseRouter noiseRouter, int l, int m, DensityFunctions.BeardifierOrMarker beardifierOrMarker,
-                                      NoiseGeneratorSettings noiseGeneratorSettings, Aquifer.FluidPicker fluidPicker, Blender blender, ChunkAccess chunkAccess){
+                                      NoiseGeneratorSettings noiseGeneratorSettings, Aquifer.FluidPicker fluidPicker, Blender blender, ChunkAccess chunkAccess) {
         NoiseChunk noiseChunk = NoiseChunkAccess.invokeInit(i, j, k, noiseRouter, l, m, beardifierOrMarker, noiseGeneratorSettings, fluidPicker, blender);
         ((NoiseCube) noiseChunk).setMinY(chunkAccess.getMinBuildHeight());
         ((NoiseCube) noiseChunk).setCubic(chunkAccess instanceof ProtoCube || chunkAccess instanceof NoiseAndSurfaceBuilderHelper);
@@ -226,7 +225,7 @@ public abstract class MixinNoiseChunk implements NoiseCube {
             Aquifer.FluidPicker fluidPicker,
             Blender blender,
             int x, int z, int minCellY
-    ){
+    ) {
         NoiseChunk noiseChunk = NoiseChunkAccess.invokeInit(i, j, k, noiseRouter, l, m, beardifierOrMarker, noiseGeneratorSettings, fluidPicker, blender);
         ((NoiseCube) noiseChunk).setMinY(minCellY * noiseGeneratorSettings.noiseSettings().getCellHeight());
         // "isCubic" is set in MixinNoiseBasedChunkGenerator (That is the only place forColumn is called) because there is not enough context in this method to determine that
