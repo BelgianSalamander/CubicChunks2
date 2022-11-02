@@ -43,7 +43,9 @@
         "common.placement.verticalanchor.MixinVerticalAnchorAboveBottom",
         "common.placement.verticalanchor.MixinVerticalAnchorBelowTop",
         "common.structure.MixinStructureFeature",
-        "common.structure.MixinStructurePiece"
+        "common.structure.MixinStructurePiece",
+        "common.MixinSurfaceRulesContext",
+        "common.MixinNoiseBasedAquifer"
     ],
     "client": [],
     "server": []

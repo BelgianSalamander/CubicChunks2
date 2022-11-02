@@ -38,7 +38,8 @@
         "common.ThreadedLevelLightEngineAccess",
         "common.TicketAccess",
         "common.TicketTypeAccess",
-        "common.WorldGenRegionAccess"
+        "common.WorldGenRegionAccess",
+        "common.NoiseRouterDataAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",

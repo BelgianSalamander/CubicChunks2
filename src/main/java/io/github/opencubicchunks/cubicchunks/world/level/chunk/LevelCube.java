@@ -320,7 +320,7 @@ public class LevelCube extends CubeAccess implements CubicLevelHeightAccessor {
     }
 
     @Deprecated @Override public ChunkPos getPos() {
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException("This method is not supported for Cubes");
     }
 
     @Override public CubePos getCubePos() {
